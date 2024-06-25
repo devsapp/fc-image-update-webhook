@@ -1,0 +1,80 @@
+Edition: 3.0.0
+Type: Project
+Name: fc-image-update-webhook
+Version: 0.0.4
+Provider:
+  - 阿里云
+Description: 当镜像推送到 ACR 时触发函数的镜像更新
+HomePage: https://github.com/devsapp/fc-image-update-webhook
+Tags:
+  - Webhook
+Category: 其它
+Service:
+  函数计算:
+    Authorities:
+      - AliyunFCFullAccess
+Organization: 阿里云函数计算（FC）
+Effective: Public
+Parameters:
+  type: object
+  additionalProperties: false
+  required:
+    - region
+    - autoUpdateFunctions
+    - hookFunctionName
+    - workerFunctionName
+    - role
+  properties:
+    region:
+      title: 函数所在地域
+      type: string
+      default: ""
+      description: 需要自动更新镜像的函数所在的地域
+      x-region: all
+      enum:
+        - cn-beijing
+        - cn-hangzhou
+        - cn-shanghai
+        - cn-qingdao
+        - cn-zhangjiakou
+        - cn-huhehaote
+        - cn-shenzhen
+        - cn-chengdu
+        - cn-hongkong
+        - ap-southeast-1
+        - ap-southeast-3
+        - ap-southeast-5
+        - ap-southeast-7
+        - ap-northeast-1
+        - ap-northeast-2
+        - eu-central-1
+        - eu-west-1
+        - us-west-1
+        - us-east-1
+    autoUpdateFunctions:
+      title: 函数列表
+      type: string
+      description: 需要自动更新镜像的函数列表，以英文逗号分隔。提示：* 代表所有函数。
+    hookFunctionName:
+      title: Image Update Hook 函数名
+      type: string
+      default: image-update-hook-${default-suffix}
+      description: Image update hook 函数的名称
+    workerFunctionName:
+      title: Image Update Worker 函数名
+      type: string
+      default: image-update-worker-${default-suffix}
+      description: Image update worker 函数的名称
+    role:
+      title: RAM 角色
+      type: string
+      default: ""
+      description: 我们会用此角色生成临时密钥来访问 ACR 和 FC。
+      x-role:
+        type: object
+        pattern: "^acs:ram::[0-9]*:role/.*$"
+        service: fc
+        description: 我们会用此角色生成临时密钥来访问 ACR 和 FC。
+        authorities:
+          - AliyunFCFullAccess
+          - AliyunContainerRegistryReadOnlyAccess

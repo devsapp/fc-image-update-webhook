@@ -1,0 +1,72 @@
+edition: 3.0.0
+access: "{{ access }}"
+vars:
+  region: "{{ region }}"
+  hookFunctionName: "{{ hookFunctionName }}"
+  workerFunctionName: "{{ workerFunctionName }}"
+  autoUpdateFunctions: "{{ autoUpdateFunctions }}"
+  role: "{{ role }}"
+resources:
+  image-update-hook:
+    component: fc3
+    actions:
+      pre-deploy:
+        - run: export PATH=/usr/local/versions/node/v20.8.1/bin:$PATH && npm install
+          path: ./image-update-hook
+    props:
+      region: ${vars.region}
+      functionName: ${vars.hookFunctionName}
+      handler: index.handler
+      role: ${vars.role}
+      timeout: 600
+      cpu: 1
+      memorySize: 2048
+      diskSize: 10240
+      environmentVariables:
+        WORKER_FUNCTION_NAME: ${vars.workerFunctionName}
+      internetAccess: true
+      instanceLifecycleConfig:
+        initializer:
+          handler: index.initialize
+          timeout: 3
+      runtime: nodejs20
+      code: ./image-update-hook
+      triggers:
+        - triggerConfig:
+            methods:
+              - GET
+              - POST
+              - PUT
+            authType: anonymous
+            disableURLInternet: false
+          triggerName: http-trigger
+          qualifier: LATEST
+          triggerType: http
+  image-update-worker:
+    component: fc3
+    actions:
+      pre-deploy:
+        - run: export PATH=/usr/local/versions/node/v20.8.1/bin:$PATH && npm install
+          path: ./image-update-worker
+    props:
+      region: ${vars.region}
+      functionName: ${vars.workerFunctionName}
+      handler: index.handler
+      role: ${vars.role}
+      timeout: 600
+      cpu: 1
+      memorySize: 2048
+      diskSize: 10240
+      environmentVariables:
+        AUTO_UPDATE_FUNCTIONS: ${vars.autoUpdateFunctions}
+      internetAccess: true
+      instanceLifecycleConfig:
+        initializer:
+          handler: index.initialize
+          timeout: 3
+      runtime: nodejs20
+      code: ./image-update-worker
+      asyncInvokeConfig:
+        asyncTask: true
+        maxAsyncEventAgeInSeconds: 86400
+        maxAsyncRetryAttempts: 3
